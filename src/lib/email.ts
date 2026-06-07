@@ -15,7 +15,6 @@ export async function sendStageNotification(
   comment?: string | null
 ) {
   if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('xxx')) {
-    console.log(`[STUB EMAIL] To: ${toEmail} | Stage: ${unitName} | Status: ${status}`)
     return { success: true, stub: true }
   }
 
@@ -51,7 +50,6 @@ export async function sendCertificateReady(
   requestId: string
 ) {
   if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('xxx')) {
-    console.log(`[STUB EMAIL] To: ${toEmail} | Certificate Ready!`)
     return { success: true, stub: true }
   }
 
