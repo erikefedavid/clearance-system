@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  OFFICER
+  REGISTRY
+}
+
+enum RequestStatus {
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum StageStatus {
+  PENDING
+  APPROVED
+  QUERIED
+  RETURNED
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  passwordHash    String
+  role            Role
+  unitName        String?          // Only set for OFFICER role
+  createdAt       DateTime         @default(now())
+  student         Student?
+  clearanceStages ClearanceStage[]
+  auditLogs       AuditLog[]
+}
+
+model Student {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  user           User               @relation(fields: [userId], references: [id])
+  fullName       String
+  matricNumber   String             @unique
+  programme      String
+  faculty        String
+  level          Int
+  createdAt      DateTime           @default(now())
+  requests       ClearanceRequest[]
+}
+
+model ClearanceRequest {
+  id             String             @id @default(cuid())
+  studentId      String
+  student        Student            @relation(fields: [studentId], references: [id])
+  status         RequestStatus      @default(IN_PROGRESS)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  stages         ClearanceStage[]
+}
+
+model ClearanceStage {
+  id             String             @id @default(cuid())
+  requestId      String
+  request        ClearanceRequest   @relation(fields: [requestId], references: [id])
+  unitName       String             // LIBRARY, BURSARY, DEPARTMENT, FACULTY, REGISTRY
+  unitOrder      Int
+  status         StageStatus        @default(PENDING)
+  officerId      String?
+  officer        User?              @relation(fields: [officerId], references: [id])
+  comment        String?
+  decidedAt      DateTime?
+  auditLogs      AuditLog[]
+
+  @@index([requestId, unitOrder])
+}
+
+model AuditLog {
+  id             String             @id @default(cuid())
+  stageId        String
+  stage          ClearanceStage     @relation(fields: [stageId], references: [id])
+  actorId        String
+  actor          User               @relation(fields: [actorId], references: [id])
+  previousStatus StageStatus
+  newStatus      StageStatus
+  comment        String?
+  timestamp      DateTime           @default(now())
+}
