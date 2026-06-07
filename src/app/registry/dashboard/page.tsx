@@ -124,8 +124,6 @@ export default async function RegistryDashboardPage({
                       <TableCell className="text-right">
                         {currentStage?.unitName === 'REGISTRY' && currentStage.status === StageStatus.PENDING ? (
                           <DecisionForm stageId={currentStage.id} studentName={req.student.fullName} />
-                        ) : currentStage && currentStage.status === StageStatus.QUERIED ? (
-                          <DecisionForm stageId={currentStage.id} studentName={req.student.fullName} />
                         ) : !currentStage && approvedCount === 5 ? (
                           <form action={async () => {
                             'use server'

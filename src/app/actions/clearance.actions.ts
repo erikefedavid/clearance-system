@@ -98,11 +98,13 @@ export async function recordDecision(formData: FormData) {
       return { error: 'Stage not found.' }
     }
 
-    // Is Registry override?
-    const isRegistryOverride = session.user.role === Role.REGISTRY && newStatus === StageStatus.APPROVED
-
-    if (!isRegistryOverride && session.user.role === Role.OFFICER && session.user.unitName !== stage.unitName) {
+    if (session.user.role === Role.OFFICER && session.user.unitName !== stage.unitName) {
       return { error: 'You can only process requests for your unit.' }
+    }
+    
+    // Registry should only be able to process the REGISTRY stage
+    if (session.user.role === Role.REGISTRY && stage.unitName !== 'REGISTRY') {
+      return { error: 'Registry cannot override decisions for other units.' }
     }
 
     await prisma.$transaction(async (tx) => {
@@ -124,7 +126,7 @@ export async function recordDecision(formData: FormData) {
           actorId: session.user.id,
           previousStatus: stage.status,
           newStatus: newStatus,
-          comment: comment || (isRegistryOverride ? 'Registry Override' : null),
+          comment: comment || null,
         }
       })
 

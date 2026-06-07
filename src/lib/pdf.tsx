@@ -1,81 +1,159 @@
-import { Document, Page, Text, View, StyleSheet, renderToStream, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, renderToStream, Image as PDFImage } from '@react-pdf/renderer'
 import { Student, ClearanceRequest, StageStatus } from '@prisma/client'
+import fs from 'fs'
+import path from 'path'
+
+// Read the logo synchronously to use as base64
+const logoPath = path.join(process.cwd(), 'public/lcu-logo.png')
+let logoBase64 = ''
+try {
+  const logoBuffer = fs.readFileSync(logoPath)
+  logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+} catch (e) {
+  console.error('Failed to load logo for PDF', e)
+}
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    padding: 50,
+    padding: 40,
     fontFamily: 'Helvetica',
+    position: 'relative',
+    backgroundColor: '#ffffff',
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  watermark: {
+    width: 400,
+    opacity: 0.05,
+  },
+  border: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    bottom: 20,
+    border: '3 solid #1a365d',
+    zIndex: -2,
+  },
+  innerBorder: {
+    position: 'absolute',
+    top: 25,
+    left: 25,
+    right: 25,
+    bottom: 25,
+    border: '1 solid #1a365d',
+    zIndex: -2,
   },
   header: {
-    marginBottom: 40,
-    textAlign: 'center',
-    borderBottom: '2 solid #000',
-    paddingBottom: 20,
+    marginTop: 30,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 15,
   },
   university: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: '#1a365d',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   department: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4a5568',
-    marginBottom: 5,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 40,
+    color: '#2b6cb0',
     textTransform: 'uppercase',
+    letterSpacing: 2,
   },
   detailsContainer: {
     marginBottom: 40,
-    padding: 20,
-    backgroundColor: '#f7fafc',
+    padding: 25,
+    backgroundColor: 'rgba(247, 250, 252, 0.8)',
     borderRadius: 8,
+    marginHorizontal: 30,
+    borderLeft: '4 solid #2b6cb0',
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 15,
+    marginBottom: 12,
+    alignItems: 'center',
   },
   label: {
-    width: 150,
+    width: 160,
     fontSize: 12,
     fontWeight: 'bold',
     color: '#4a5568',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   value: {
     flex: 1,
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#1a202c',
+  },
+  paragraph: {
+    fontSize: 13,
+    lineHeight: 1.8,
+    marginBottom: 40,
+    marginHorizontal: 30,
+    textAlign: 'justify',
+    color: '#2d3748',
   },
   signatureContainer: {
-    marginTop: 60,
+    marginTop: 50,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginHorizontal: 40,
   },
   signatureBlock: {
-    width: 200,
+    width: 180,
     textAlign: 'center',
   },
   signatureLine: {
-    borderTop: '1 solid #000',
+    borderTop: '1 solid #1a365d',
     marginTop: 40,
-    paddingTop: 10,
+    paddingTop: 8,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1a365d',
+  },
+  signatureText: {
+    fontStyle: 'italic',
+    marginBottom: 10,
+    fontSize: 11,
+    color: '#4a5568',
   },
   footer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 40,
     left: 50,
     right: 50,
     textAlign: 'center',
-    fontSize: 10,
+    fontSize: 9,
     color: '#a0aec0',
-    borderTop: '1 solid #e2e8f0',
-    paddingTop: 10,
   }
 })
 
@@ -99,8 +177,18 @@ export async function generateCertificatePDF(
   const MyDocument = () => (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.border} />
+        <View style={styles.innerBorder} />
+
+        {logoBase64 && (
+          <View style={styles.watermarkContainer}>
+            <PDFImage src={logoBase64} style={styles.watermark} />
+          </View>
+        )}
+
         <View style={styles.header}>
-          <Text style={styles.university}>Lead City University, Ibadan</Text>
+          {logoBase64 && <PDFImage src={logoBase64} style={styles.logo} />}
+          <Text style={styles.university}>Lead City University</Text>
           <Text style={styles.department}>Department of Computer Science</Text>
         </View>
 
@@ -112,7 +200,7 @@ export async function generateCertificatePDF(
             <Text style={styles.value}>{student.fullName.toUpperCase()}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Matriculation Number:</Text>
+            <Text style={styles.label}>Matriculation No:</Text>
             <Text style={styles.value}>{student.matricNumber}</Text>
           </View>
           <View style={styles.row}>
@@ -124,29 +212,30 @@ export async function generateCertificatePDF(
             <Text style={styles.value}>{student.faculty}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Clearance Date:</Text>
+            <Text style={styles.label}>Date of Issue:</Text>
             <Text style={styles.value}>{clearanceDate}</Text>
           </View>
         </View>
 
-        <Text style={{ fontSize: 12, lineHeight: 1.5, marginBottom: 40 }}>
-          This is to certify that the above-named student has successfully completed the graduation clearance process 
-          across all required administrative units (Library, Bursary, Department, Faculty, and Registry). 
-          They are hereby cleared of all obligations to the university.
+        <Text style={styles.paragraph}>
+          This is to certify that the above-named student has successfully completed the rigorous graduation clearance process 
+          across all required administrative units including the Library, Bursary, Department, Faculty, and Registry. 
+          The student is hereby cleared of all academic and financial obligations to the university and is approved for graduation.
         </Text>
 
         <View style={styles.signatureContainer}>
           <View style={styles.signatureBlock}>
+            <Text style={styles.signatureText}>{clearanceDate}</Text>
             <Text style={styles.signatureLine}>Date</Text>
           </View>
           <View style={styles.signatureBlock}>
-            <Text style={{ fontStyle: 'italic', marginBottom: 10 }}>Electronically Signed</Text>
+            <Text style={styles.signatureText}>Digitally Signed</Text>
             <Text style={styles.signatureLine}>Registry Officer</Text>
           </View>
         </View>
 
         <Text style={styles.footer}>
-          This document was electronically generated by the LCU Online Student Clearance System. 
+          This is an official document generated by the LCU Online Student Clearance System. 
           Reference ID: {request.id}
         </Text>
       </Page>

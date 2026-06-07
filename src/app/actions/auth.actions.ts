@@ -78,18 +78,32 @@ export async function registerStudent(formData: FormData) {
 
 export async function loginUser(formData: FormData) {
   const { signIn } = await import('@/lib/auth')
+  
+  // Find the user to determine the correct dashboard path
+  const email = formData.get('email') as string
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+  
+  let redirectTo = '/dashboard' // Default for STUDENT
+  if (user) {
+    if (user.role === 'OFFICER') redirectTo = '/officer/dashboard'
+    if (user.role === 'REGISTRY') redirectTo = '/registry/dashboard'
+  }
+
   try {
-    await signIn('credentials', Object.fromEntries(formData))
+    await signIn('credentials', { ...Object.fromEntries(formData), redirectTo })
     return { success: true }
   } catch (error: any) {
-    if (error.type === 'CredentialsSignin') {
+    // NextAuth throws AuthError for auth failures
+    if (error.name === 'CredentialsSignin' || error.type === 'CredentialsSignin') {
       return { error: 'Invalid email or password.' }
     }
-    // NextAuth throws a special error for redirects, we MUST throw it again
-    if (error.message === 'NEXT_REDIRECT') {
-      throw error
+    if (error.name === 'AuthError') {
+      return { error: 'An unexpected authentication error occurred.' }
     }
-    return { error: 'An unexpected error occurred.' }
+    // Must re-throw Next.js redirect errors
+    throw error
   }
 }
 
