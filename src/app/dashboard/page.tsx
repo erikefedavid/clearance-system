@@ -39,11 +39,22 @@ export default async function StudentDashboardPage() {
           <p className="text-muted-foreground mt-1">Track your graduation clearance progress across all units.</p>
         </div>
 
-        {activeRequest?.status === RequestStatus.COMPLETED && (
-          <Link href={`/api/certificate/${activeRequest.id}`} className={buttonVariants({ className: "bg-primary shadow-sm hover:shadow-md transition-all" })}>
-            <FileText className="mr-2 h-4 w-4" /> Download Certificate
-          </Link>
-        )}
+        <div className="flex items-center gap-4">
+          {activeRequest?.status === RequestStatus.COMPLETED && (
+            <Link href={`/api/certificate/${activeRequest.id}`} className={buttonVariants({ className: "bg-primary shadow-sm hover:shadow-md transition-all" })}>
+              <FileText className="mr-2 h-4 w-4" /> Download Certificate
+            </Link>
+          )}
+          <form action={async () => {
+            'use server'
+            const { logoutUser } = await import('@/app/actions/auth.actions')
+            await logoutUser()
+          }}>
+            <Button type="submit" variant="outline" size="sm" className="text-muted-foreground hover:text-foreground">
+              Log out
+            </Button>
+          </form>
+        </div>
       </div>
 
       {!activeRequest ? (

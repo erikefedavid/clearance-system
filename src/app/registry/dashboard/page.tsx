@@ -45,6 +45,15 @@ export default async function RegistryDashboardPage({
           <h1 className="text-3xl font-bold tracking-tight">Registry Administration</h1>
           <p className="text-muted-foreground mt-1">Monitor all active clearance requests and issue final certificates.</p>
         </div>
+        <form action={async () => {
+          'use server'
+          const { logoutUser } = await import('@/app/actions/auth.actions')
+          await logoutUser()
+        }}>
+          <Button type="submit" variant="outline" size="sm" className="text-muted-foreground hover:text-foreground">
+            Log out
+          </Button>
+        </form>
       </div>
 
       <Card>

@@ -109,5 +109,5 @@ export async function loginUser(formData: FormData) {
 
 export async function logoutUser() {
   const { signOut } = await import('@/lib/auth')
-  await signOut()
+  await signOut({ redirectTo: '/login' })
 }

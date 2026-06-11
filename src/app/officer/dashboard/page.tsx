@@ -54,9 +54,20 @@ export default async function OfficerDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{session.user.unitName} Unit Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Manage pending clearance requests assigned to your unit.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Unit Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage clearance requests for the <span className="font-semibold text-primary">{session.user.unitName}</span> unit.</p>
+        </div>
+        <form action={async () => {
+          'use server'
+          const { logoutUser } = await import('@/app/actions/auth.actions')
+          await logoutUser()
+        }}>
+          <Button type="submit" variant="outline" size="sm" className="text-muted-foreground hover:text-foreground">
+            Log out
+          </Button>
+        </form>
       </div>
 
       <Card>
