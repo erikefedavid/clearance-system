@@ -3,7 +3,7 @@ import { StageNotificationEmail } from '@/emails/StageNotificationEmail'
 import { CertificateReadyEmail } from '@/emails/CertificateReadyEmail'
 import { StageStatus } from '@prisma/client'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_to_prevent_crash')
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@lcu-clearance.com'
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
